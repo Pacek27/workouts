@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>💪 Workout Program</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#0f0f0f;--surface:#1a1a1a;--card:#242424;--border:#333;
+    --accent:#f97316;--accent2:#fb923c;--text:#f1f1f1;--muted:#888;
+    --back:#3b82f6;--chest:#ef4444;--core:#10b981;--legs:#a855f7;
+    --radius:14px;--shadow:0 4px 20px rgba(0,0,0,.5)
+  }
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}
+  /* HEADER */
+  .header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,15,15,.95);backdrop-filter:blur(12px);padding:env(safe-area-inset-top,0) 0 0;border-bottom:1px solid var(--border)}
+  .header-inner{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between}
+  .header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--accent),#facc15);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .tabs{display:flex;gap:4px;padding:10px 16px 0}
+  .tab{flex:1;padding:10px 6px;text-align:center;font-size:13px;font-weight:600;border-radius:10px 10px 0 0;cursor:pointer;transition:.2s;color:var(--muted);border:none;background:transparent}
+  .tab.active{color:var(--accent);border-bottom:2px solid var(--accent)}
+  /* MAIN */
+  .main{padding-top:110px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px);min-height:100vh}
+  .pane{display:none;padding:0 0 40px}
+  .pane.active{display:block}
+  /* WEEK SELECTOR */
+  .week-bar{padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:109px;z-index:50}
+  .week-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .week-scroll::-webkit-scrollbar{display:none}
+  .wk{min-width:52px;padding:6px 10px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;text-align:center;white-space:nowrap;transition:.2s}
+  .wk.active{background:var(--accent);border-color:var(--accent);color:#000}
+  .phase-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  /* DAY CARDS */
+  .days-grid{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .day-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+  .day-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .day-label{display:flex;align-items:center;gap:10px}
+  .day-dot{width:10px;height:10px;border-radius:50%}
+  .day-title{font-size:16px;font-weight:700}
+  .day-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .day-chevron{font-size:18px;color:var(--muted);transition:.3s}
+  .day-card.open .day-chevron{transform:rotate(180deg)}
+  .day-exercises{display:none;border-top:1px solid var(--border)}
+  .day-card.open .day-exercises{display:block}
+  /* EXERCISE ITEM IN PLAN */
+  .ex-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s;active:background:var(--card)}
+  .ex-item:last-child{border-bottom:none}
+  .ex-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+  .ex-info{flex:1;min-width:0}
+  .ex-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ex-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .ex-play{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:none;flex-direction:column;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,20px)}
+  .modal-overlay.open{display:flex}
+  .modal-close{position:sticky;top:0;z-index:10;padding:env(safe-area-inset-top,16px) 16px 12px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.8);backdrop-filter:blur(10px)}
+  .modal-close h2{font-size:18px;font-weight:700;flex:1;margin-right:10px}
+  .close-btn{width:36px;height:36px;border-radius:50%;background:var(--card);border:none;color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .modal-video{width:100%;background:#000;position:relative;min-height:300px}
+  .modal-video video{width:100%;max-height:55vh;object-fit:contain;display:block}
+  .modal-body{padding:20px 16px}
+  .modal-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tag{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid}
+  .modal-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+  .cue-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .cue-list li{font-size:14px;line-height:1.5;padding-left:18px;position:relative;color:#d4d4d4}
+  .cue-list li::before{content:"›";position:absolute;left:0;color:var(--accent);font-weight:700}
+  /* LIBRARY */
+  .lib-search{padding:14px 16px;position:sticky;top:109px;z-index:50;background:rgba(15,15,15,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .search-input{width:100%;padding:10px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;outline:none}
+  .search-input:focus{border-color:var(--accent)}
+  .cat-tabs{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 0;scrollbar-width:none;border-bottom:1px solid var(--border);background:rgba(15,15,15,.95);backdrop-filter:blur(10px);position:sticky;top:162px;z-index:49}
+  .cat-tabs::-webkit-scrollbar{display:none}
+  .cat-tab{padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.2s;margin-bottom:10px}
+  .cat-tab.active{color:#000;border-color:transparent}
+  .cat-tab[data-cat="all"].active{background:var(--accent)}
+  .cat-tab[data-cat="back"].active{background:var(--back)}
+  .cat-tab[data-cat="chest"].active{background:var(--chest)}
+  .cat-tab[data-cat="core"].active{background:var(--core)}
+  .cat-tab[data-cat="legs"].active{background:var(--legs)}
+  .lib-section{padding:14px 16px}
+  .lib-cat-header{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:10px 0 8px;display:flex;align-items:center;gap:8px}
+  .lib-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .lib-grid{display:flex;flex-direction:column;gap:8px}
+  .lib-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.15s}
+  .lib-card:active{background:var(--card)}
+  .lib-thumb{width:64px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#111;position:relative}
+  .lib-thumb video{width:100%;height:100%;object-fit:cover}
+  .lib-play-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);font-size:20px}
+  .lib-info{flex:1;min-width:0}
+  .lib-name{font-size:14px;font-weight:600}
+  .lib-meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .lib-arrow{font-size:16px;color:var(--muted)}
+  /* PHASE COLORS */
+  .phase-1{background:#1e3a5f;color:#60a5fa}
+  .phase-2{background:#1a3a2a;color:#34d399}
+  .phase-3{background:#3a1a2a;color:#f472b6}
+  .phase-4{background:#3a2a0a;color:#fbbf24}
+  /* CATEGORY COLORS */
+  .c-back{background:rgba(59,130,246,.15);color:var(--back);border-color:var(--back)}
+  .c-chest{background:rgba(239,68,68,.15);color:var(--chest);border-color:var(--chest)}
+  .c-core{background:rgba(16,185,129,.15);color:var(--core);border-color:var(--core)}
+  .c-legs{background:rgba(168,85,247,.15);color:var(--legs);border-color:var(--legs)}
+  .dot-back{background:var(--back)}
+  .dot-chest{background:var(--chest)}
+  .dot-core{background:var(--core)}
+  .dot-legs{background:var(--legs)}
+  .num-back{background:rgba(59,130,246,.2);color:var(--back)}
+  .num-chest{background:rgba(239,68,68,.2);color:var(--chest)}
+  .num-core{background:rgba(16,185,129,.2);color:var(--core)}
+  .num-legs{background:rgba(168,85,247,.2);color:var(--legs)}
+  /* NOTE BADGE */
+  .note-badge{display:inline-block;background:rgba(249,115,22,.15);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:4px;border:1px solid rgba(249,115,22,.3)}
+  /* VIDEO LOADING */
+  .vid-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;font-size:24px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <h1>💪 Workout Program</h1>
+    <span id="phase-display" style="font-size:12px;font-weight:600;color:var(--muted)"></span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchPane('program')">📅 Program</button>
+    <button class="tab" onclick="switchPane('library')">📚 Exercise Library</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ═══════════════ PROGRAM PANE ═══════════════ -->
+  <div id="pane-program" class="pane active">
+
+    <!-- Week selector -->
+    <div class="week-bar">
+      <div class="week-scroll" id="weekScroll"></div>
+    </div>
+
+    <!-- Day cards -->
+    <div class="days-grid" id="daysGrid"></div>
+
+  </div>
+
+  <!-- ═══════════════ LIBRARY PANE ═══════════════ -->
+  <div id="pane-library" class="pane">
+    <div class="lib-search">
+      <input class="search-input" type="search" placeholder="🔍  Search exercises…" oninput="filterLib(this.value)" id="searchInput">
+    </div>
+    <div class="cat-tabs">
+      <button class="cat-tab active" data-cat="all" onclick="setCat('all',this)">All (62)</button>
+      <button class="cat-tab" data-cat="back" onclick="setCat('back',this)">🔵 Back (12)</button>
+      <button class="cat-tab" data-cat="chest" onclick="setCat('chest',this)">🔴 Chest (13)</button>
+      <button class="cat-tab" data-cat="core" onclick="setCat('core',this)">🟢 Core (15)</button>
+      <button class="cat-tab" data-cat="legs" onclick="setCat('legs',this)">🟣 Legs (22)</button>
+    </div>
+    <div class="lib-section" id="libContent"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════ EXERCISE MODAL ═══════════════ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-close">
+    <h2 id="modalTitle"></h2>
+    <button class="close-btn" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-video">
+    <div class="vid-loading" id="vidLoading">⏳</div>
+    <video id="modalVideo" playsinline webkit-playsinline muted loop controls
+      style="display:none"
+      oncanplay="document.getElementById('vidLoading').style.display='none';this.style.display='block';this.play()">
+    </video>
+  </div>
+  <div class="modal-body">
+    <div class="modal-tags" id="modalTags"></div>
+    <p class="modal-section-title">Coaching Cues</p>
+    <ul class="cue-list" id="modalCues"></ul>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// EXERCISE DATABASE
+// ═══════════════════════════════════════════
+const EX = {
+back:[
+{id:'back_01',file:'back_01_barbell_rows.mp4',name:'Barbell Rows',sets:4,reps:'10',unit:'reps',cues:['Keep your back straight','Put your head back and chin up','Chest out','Push your hips back','Bodyweight on heels','Shoulders, elbows and forearms in a vertical line to the bar','Pull the bar diagonally along your thighs below your belly button','Elbows as high as possible towards the ceiling','Grip bar one palm wider than shoulder height','Shoulder width stand']},
+{id:'back_02',file:'back_02_rotating_cable_rows.mp4',name:'Rotating Cable Rows',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Left arm pulls – right leg in front','Right arm pulls – left leg in front','Arm extended','Rotate completely','Squat down slightly','Wide stand','Tighten stomach','Pull to hip','Hold for a second']},
+{id:'back_03',file:'back_03_gymnastic_ring_rows.mp4',name:'Gymnastic Ring Rows',sets:4,reps:'Until Failure',unit:'failure',note:'2 SETS EACH SIDE',cues:['Arm on the ring fully extended when down','Tighten your hips and stomach','Slight rotation to the side','Push through from the heel','Bend the leg and move it upwards','Pull up with the extended arm on the ring and bend it while going up','Reach to the top with the other arm (not on the ring)']},
+{id:'back_04',file:'back_04_landmine_rope_rows.mp4',name:'Landmine Rope Rows',sets:3,reps:'10',unit:'reps',cues:['Plate only needed when arms can\'t be fully extended','Bodyweight on heels','Pull towards the navel','Pull to the highest point possible']},
+{id:'back_05',file:'back_05_gorilla_rows.mp4',name:'Gorilla Rows',sets:3,reps:'16',unit:'reps',cues:['Keep your back straight','Pull weight to your hips','Press against the kettlebell with the standing arm while pulling','Body weight on heels']},
+{id:'back_06',file:'back_06_one_arm_pulled_shoulder_press.mp4',name:'One Arm Pulled Shoulder Press',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['You can also use a dumbbell + cable station','One arm pull overhead while pressing','Keep core tight throughout','Control the movement on the way down']},
+{id:'back_07',file:'back_07_pulled_hyperextensions.mp4',name:'Pulled Hyperextensions',sets:3,reps:'12',unit:'reps',cues:['You can also use dumbbells for this exercise','Press the hook against the upholstery as much as possible','Full range of motion','Squeeze at the top']},
+{id:'back_08',file:'back_08_superman_pushups.mp4',name:'Superman Push-ups',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Lower box – more load','Tighten hips and stomach','Press close to the body','Body in one line','Explosive pull over','Hold a second at the top']},
+{id:'back_09',file:'back_09_cable_pull_press.mp4',name:'Cable Pull Press',sets:4,reps:'16 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Adjust the ropes to shoulder height','Explosive push','2 sets each side','Keep core engaged throughout']},
+{id:'back_10',file:'back_10_neckhold_rows.mp4',name:'Neckhold Rows',sets:3,reps:'16',unit:'reps',cues:['Support your weight on your forehead','Hold the KB in one line with shoulder height','Arms extended','Keep tension in the back throughout']},
+{id:'back_11',file:'back_11_cable_cross_rows.mp4',name:'Cable Cross Rows',sets:3,reps:'16',unit:'reps',cues:['Wide stand on knees for more stability','Pull down as far as possible (elbow to hip)','Tense the obliques in the lowest position and hold a short moment','The other arm is fully extended while the other is pulling']},
+{id:'back_12',file:'back_12_gymnastic_pull_press.mp4',name:'Gymnastic Pull Press',sets:3,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['You can also use a dumbbell + TRX band','Pull and press in one fluid movement','Keep body stable','Control the rotation']}
+],
+chest:[
+{id:'chest_01',file:'chest_01_plate_pushups.mp4',name:'Plate Pushups',sets:3,reps:'12',unit:'reps',cues:['Body in one line from head to heels','Hands on plates for extra grip challenge','Tighten core and glutes throughout','Full range of motion – chest to the floor']},
+{id:'chest_02',file:'chest_02_one_armed_push_ups.mp4',name:'One Armed Push Ups',sets:6,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Body in one line','Wide stand for more stability','Tighten stomach throughout','Keep hips level – don\'t rotate']},
+{id:'chest_03',file:'chest_03_high_box_press.mp4',name:'High Box Press',sets:4,reps:'8 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Stomach tight','Chest out','Push from the elevated surface','Keep working arm at correct angle']},
+{id:'chest_04',file:'chest_04_landmine_flys.mp4',name:'Landmine Flys',sets:4,reps:'12',unit:'reps',cues:['Control the fly movement','Keep a slight bend in the elbow','Core tight throughout','Squeeze the chest at the top']},
+{id:'chest_05',file:'chest_05_side_turn_push_ups.mp4',name:'Side Turn Push Ups',sets:4,reps:'Until Failure',unit:'failure',note:'2 SETS EACH SIDE',cues:['Push up and rotate to the side','Arm fully extended at the top','Body in straight line throughout','Tighten stomach']},
+{id:'chest_06',file:'chest_06_push_up_dumbbell_swings.mp4',name:'Push Up Dumbbell Swings',sets:3,reps:'8',unit:'reps',cues:['Push up position with dumbbell','Swing the dumbbell after each rep','Control the weight throughout','Keep hips stable']},
+{id:'chest_07',file:'chest_07_kb_push_up_rows.mp4',name:'KB Push Up Rows',sets:3,reps:'16',unit:'reps',cues:['Push up position with hands on KB','Row one arm after the push up','Keep hips square – don\'t rotate','Alternate arms']},
+{id:'chest_08',file:'chest_08_kb_power_pushups.mp4',name:'KB Power Push-Ups',sets:4,reps:'Until Failure',unit:'failure',note:'2 SETS EACH SIDE',cues:['Explosive push-up movement','One hand on KB','2 sets each side until muscle failure','Keep body in straight line']},
+{id:'chest_09',file:'chest_09_medball_pushups.mp4',name:'Medball Push-Ups',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['One arm on the floor, one arm on a medicine ball','While pushing down, roll the ball from hand to elbow','While pushing up, bring ball back from elbow to your hand','Tighten stomach and hips','Arm remains stretched throughout','Arm close to the body']},
+{id:'chest_10',file:'chest_10_cable_pull_press.mp4',name:'Cable Pull Press',sets:4,reps:'16 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Adjust the ropes to shoulder height','Explosive push','2 sets each side','Engage the chest throughout']},
+{id:'chest_11',file:'chest_11_plate_turn_push_ups.mp4',name:'Plate Turn Push Ups',sets:3,reps:'16',unit:'reps',cues:['Push up and rotate the plate','Control the rotation','Body in straight line','Core engaged throughout']},
+{id:'chest_12',file:'chest_12_kb_push_up_rotations.mp4',name:'KB Push Up Rotations',sets:3,reps:'14',unit:'reps',cues:['Body in one line','Wide stand for more stability','Tighten stomach throughout the whole exercise','Rotate under your arm and pull the kettlebell explosively to the other side','Shift your body weight to the supporting arm']},
+{id:'chest_13',file:'chest_13_one_armed_dumbbell_press.mp4',name:'One Armed Dumbbell Press',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Stomach tight','Chest out','Twist the barbell slightly as you go down','Working arm at 45 degree angle','Press at shoulder height','Balance the weight shift with your leg']}
+],
+core:[
+{id:'core_01',file:'core_01_med_ball_swings.mp4',name:'Med Ball Swings',sets:3,reps:'20',unit:'sec',cues:['Move the ball explosively from side over the head','Arms extended throughout','Keep your back straight','Engage core fully']},
+{id:'core_02',file:'core_02_kb_golf_swings.mp4',name:'KB Golf Swings',sets:4,reps:'15 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['You can also use a dumbbell for this exercise','Move weight from hip to head','Keep your back straight','Tighten stomach','Rotate upper body','Lower body stays static']},
+{id:'core_03',file:'core_03_plate_hook_rotations.mp4',name:'Plate Hook Rotations',sets:3,reps:'Until Failure',unit:'failure',cues:['DO THIS EXERCISE 3 SETS UNTIL MUSCLE FAILURE (ignore the "0 reps")','Wide stand for more stability','Or on your knees','Swing the plate sideways upwards','Rotate and tighten your stomach']},
+{id:'core_04',file:'core_04_landmine_l_r_swings.mp4',name:'Landmine L to R Swings',sets:3,reps:'14',unit:'reps',cues:['Stop for a moment at the top','Arm in the front extended','Rotate to the side','Tighten stomach','Arm in the back slightly bent, push up with it again']},
+{id:'core_05',file:'core_05_landmine_power_rotations.mp4',name:'Landmine Power Rotations',sets:3,reps:'16',unit:'reps',cues:['Arms remain extended throughout','Hold the tension in your stomach','Body weight on knees','Rotate powerfully from side to side']},
+{id:'core_06',file:'core_06_fullplank_kb_switches.mp4',name:'Fullplank KB Switches',sets:3,reps:'30',unit:'sec',cues:['Lower box – lower load','Body in a straight line','Wider stand for stability','Tighten hips and stomach','Straighten arm','Explosive rotation','Body weight on the hand that is not grabbing the weight']},
+{id:'core_07',file:'core_07_banded_suitcase_carry.mp4',name:'Banded Suitcase Carry',sets:4,reps:'30 each side',unit:'sec',note:'2 SETS EACH SIDE',cues:['You can also do the exercise without a resistance band','Tighten stomach','Fast rocking movements','Body weight on the heel that is on the same side as the weight']},
+{id:'core_08',file:'core_08_medball_pushups.mp4',name:'Medball Push-Ups (Core)',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['One arm on the floor, one arm on a medicine ball','While pushing down, roll the ball from hand to elbow','While pushing up, bring ball back from elbow to hand','Tighten stomach and hips','Arm remains stretched throughout','Arm close to the body']},
+{id:'core_09',file:'core_09_leg_raise_kicks.mp4',name:'Leg Raise Kicks',sets:3,reps:'20',unit:'sec',cues:['You can also do this exercise without a resistance band','Wide grip on bar','Tighten stomach','Straight legs throughout','Explosive kick movement']},
+{id:'core_10',file:'core_10_kneeled_core_rotations.mp4',name:'Kneeled Core Rotations',sets:3,reps:'16',unit:'reps',cues:['Grip one palm wider than shoulder width','Chest out','Hollow back','Rotate from the core – not the arms','Keep hips stable']},
+{id:'core_11',file:'core_11_banded_rotation_push_ups.mp4',name:'Banded Rotation Push Ups',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Wide stand for more stability','Body in a straight line','Pull the band with the opposite hand that\'s further away','Put your arm through','Explosive rotation up','Straighten arm','Tighten stomach','Body weight on the hand that is closer to the band']},
+{id:'core_12',file:'core_12_kb_push_up_rotations.mp4',name:'KB Push Up Rotations (Core)',sets:3,reps:'14',unit:'reps',cues:['Body in one line','Wide stand for more stability','Tighten stomach throughout whole exercise','Rotate under your arm and pull the kettlebell explosively to the other side','Shift your body weight to the supporting arm']},
+{id:'core_13',file:'core_13_neckhold_plate_rotations.mp4',name:'Neckhold Plate Rotations',sets:3,reps:'12',unit:'reps',cues:['Legs bent at 90 degrees','Knee to neck in one line','Hold the tension in stomach and hips throughout the whole exercise','Hold the plate at chest height','Rotate controlled from one side to the other']},
+{id:'core_14',file:'core_14_medball_crunch_rotations.mp4',name:'Medball Crunch Rotations',sets:3,reps:'12',unit:'reps',cues:['Crunch with rotation holding medball','Control the movement','Keep lower back pressed down','Touch opposite knee with medball']},
+{id:'core_15',file:'core_15_plank_kb_throws.mp4',name:'Plank KB Throws',sets:3,reps:'30',unit:'sec',cues:['Maintain plank position throughout','Throw the KB explosively','Keep hips stable – don\'t rotate','Quick reset after each throw']}
+],
+legs:[
+{id:'legs_01',file:'legs_01_squats.mp4',name:'Squats',sets:4,reps:'8',unit:'reps',cues:['You can also do back squats','IMPORTANT: Permanent bodyweight on the heels during this exercise','Back straight','Chest up','Knees tracking over toes']},
+{id:'legs_02',file:'legs_02_squat_360_rotations.mp4',name:'Squat 360 Rotations',sets:4,reps:'12',unit:'reps',cues:['Squat and rotate 360° at the top','Stay controlled throughout rotation','Land softly after rotation','Keep chest up']},
+{id:'legs_03',file:'legs_03_hamstring_kicks.mp4',name:'Hamstring Kicks',sets:3,reps:'20',unit:'sec',cues:['Kick at full speed','Push yourself up','Pull up toes','Keep the movement explosive']},
+{id:'legs_04',file:'legs_04_jumped_landmine_lunges.mp4',name:'Jumped Landmine Lunges',sets:4,reps:'12',unit:'reps',cues:['Explosive jump between lunges','Hold landmine for balance and load','Land softly on each rep','Alternate legs with each jump']},
+{id:'legs_05',file:'legs_05_farmers_lunges.mp4',name:'Farmers Lunges',sets:3,reps:'12',unit:'reps',cues:['Back straight','Chest out','Tighten stomach','Shift bodyweight onto the front (step-making) leg']},
+{id:'legs_06',file:'legs_06_med_ball_rdls.mp4',name:'Med Ball RDLs',sets:4,reps:'12',unit:'reps',cues:['Romanian deadlift with medicine ball','Hinge at the hips – not the back','Keep back straight throughout','Slight bend in knee','Squeeze glutes at the top']},
+{id:'legs_07',file:'legs_07_knee_to_feet_jumps.mp4',name:'Knee to Feet Jumps',sets:3,reps:'12',unit:'reps',cues:['Start from kneeling position','Explosive jump to standing','Land softly with both feet','Absorb impact through hips and knees']},
+{id:'legs_08',file:'legs_08_one_leg_jumping_lunges.mp4',name:'One Leg Jumping Lunges',sets:4,reps:'Until Failure',unit:'failure',note:'2 SETS EACH SIDE',cues:['2 SETS EACH SIDE UNTIL MUSCLE FAILURE (ignore the "0 reps")','Keep your head up','Explosive single leg jump','Land under control']},
+{id:'legs_09',file:'legs_09_360_lunges.mp4',name:'360 Lunges',sets:3,reps:'16',unit:'reps',cues:['Lunge with a 360° rotation','Control the rotation at top','Maintain balance throughout','Keep chest up']},
+{id:'legs_10',file:'legs_10_kb_anchor_swings.mp4',name:'KB Anchor Swings',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Rotate your body to the supporting (pivot) leg','Bodyweight on right heel first','Leg at a 100 degree angle','Explosive rotation','Shift your body weight','Shoulder and elbow at the same height','Catch the kettlebell','Rotate and stabilize with right foot','Bodyweight on the left heel after rotation']},
+{id:'legs_11',file:'legs_11_in_and_out_lunges.mp4',name:'In And Out Lunges',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Wide grip overhead','Arms extended throughout','Step in and out of lunge','Keep chest up and core tight']},
+{id:'legs_12',file:'legs_12_landmine_lunges.mp4',name:'Landmine Lunges',sets:3,reps:'16',unit:'reps',cues:['Arms remain extended','Keep the body tension','Push from the leg while rotating','Control the landmine throughout']},
+{id:'legs_13',file:'legs_13_landmine_clean_and_lunge.mp4',name:'Landmine Clean and Lunge',sets:3,reps:'8',unit:'reps',cues:['Straight back','Bodyweight on heels','Lift from your legs and catch at the top','Shift bodyweight to the sides while lunging']},
+{id:'legs_14',file:'legs_14_zercher_romanian_dls.mp4',name:'Zercher Romanian DLs',sets:3,reps:'10',unit:'reps',cues:['Straight back','Bodyweight on heels throughout whole exercise','Push your hips back','Hold a second on the low']},
+{id:'legs_15',file:'legs_15_dead_hang_squats.mp4',name:'Dead Hang Squats',sets:3,reps:'14',unit:'reps',cues:['A bit wider than shoulder wide stand','Bodyweight on heels','Go down as far as possible','Start from a dead hang position at the bottom']},
+{id:'legs_16',file:'legs_16_folding_chair_squats.mp4',name:'Folding Chair Squats',sets:3,reps:'8',unit:'reps',cues:['Straight back','Bodyweight on heels throughout whole exercise','Push your hips back and down','Think of sitting in a folding chair behind you']},
+{id:'legs_17',file:'legs_17_banded_high_knee_steps.mp4',name:'Banded High Knee Steps',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Bodyweight on the heel (step making foot)','Explosive step and knee drive to the chest','Keep upright posture','2 sets each side']},
+{id:'legs_18',file:'legs_18_landmine_stepover_lifts.mp4',name:'Landmine Stepover Lifts',sets:3,reps:'12',unit:'reps',cues:['Bodyweight on heels (press up from heels)','Keep your head up','Tighten hips and stomach','Explosive step over','Feet in one line when lifting up']},
+{id:'legs_19',file:'legs_19_rotated_barbell_lunges.mp4',name:'Rotated Barbell Lunges',sets:3,reps:'12',unit:'reps',cues:['Keep your hips and stomach tight throughout the exercise','Shift bodyweight on front (step-making) foot','Rotate torso with each lunge','Control the barbell']},
+{id:'legs_20',file:'legs_20_zercher_rotation_squats.mp4',name:'Zercher Rotation Squats',sets:3,reps:'10',unit:'reps',cues:['Place both feet on the plate','Take a step sideways behind you','Shift your bodyweight slowly onto the step making leg while rotating','Bodyweight on heel','Push yourself out of this leg into the starting position']},
+{id:'legs_21',file:'legs_21_box_lunge_rotations.mp4',name:'Box Lunge Rotations',sets:4,reps:'12 each side',unit:'reps',note:'2 SETS EACH SIDE',cues:['Entire top side of the foot on the box','Keep your head straight for more stability','2 sets each side','Rotate torso during the lunge']},
+{id:'legs_22',file:'legs_22_pulled_hyperextensions.mp4',name:'Pulled Hyperextensions',sets:3,reps:'12',unit:'reps',cues:['You can also use dumbbells for this exercise','Press the hook against the upholstery as much as possible','Full range of motion','Squeeze glutes at the top']}
+]
+};
+
+// ═══════════════════════════════════════════
+// 12-WEEK PROGRESSIVE PLAN
+// ═══════════════════════════════════════════
+const PHASES = [
+  {weeks:[1,2,3], label:'Phase 1 – Foundation', cls:'phase-1', emoji:'🌱'},
+  {weeks:[4,5,6], label:'Phase 2 – Build',       cls:'phase-2', emoji:'⚡'},
+  {weeks:[7,8,9], label:'Phase 3 – Strength',    cls:'phase-3', emoji:'🔥'},
+  {weeks:[10,11,12],label:'Phase 4 – Elite',     cls:'phase-4', emoji:'💎'}
+];
+
+const PLAN = {
+// ── PHASE 1 ──────────────────────────────────────────────
+1:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_01',sets:3,reps:'12 reps'},{id:'chest_03',sets:4,reps:'8 reps each side'},{id:'chest_04',sets:4,reps:'12 reps'},{id:'chest_07',sets:3,reps:'16 reps'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_01',sets:4,reps:'10 reps'},{id:'back_04',sets:3,reps:'10 reps'},{id:'back_05',sets:3,reps:'16 reps'},{id:'back_07',sets:3,reps:'12 reps'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_01',sets:3,reps:'20 sec'},{id:'core_02',sets:4,reps:'15 reps each side'},{id:'core_06',sets:3,reps:'30 sec'},{id:'core_07',sets:4,reps:'30 sec each side'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_01',sets:4,reps:'8 reps'},{id:'legs_03',sets:3,reps:'20 sec'},{id:'legs_05',sets:3,reps:'12 reps'},{id:'legs_06',sets:4,reps:'12 reps'}]}
+]},
+2:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_01',sets:3,reps:'12 reps'},{id:'chest_03',sets:4,reps:'8 reps each side'},{id:'chest_04',sets:4,reps:'12 reps'},{id:'chest_07',sets:3,reps:'16 reps'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_01',sets:4,reps:'10 reps'},{id:'back_04',sets:3,reps:'10 reps'},{id:'back_05',sets:3,reps:'16 reps'},{id:'back_07',sets:3,reps:'12 reps'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_01',sets:3,reps:'20 sec'},{id:'core_02',sets:4,reps:'15 reps each side'},{id:'core_06',sets:3,reps:'30 sec'},{id:'core_07',sets:4,reps:'30 sec each side'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_01',sets:4,reps:'8 reps'},{id:'legs_03',sets:3,reps:'20 sec'},{id:'legs_05',sets:3,reps:'12 reps'},{id:'legs_06',sets:4,reps:'12 reps'}]}
+]},
+3:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_01',sets:3,reps:'12 reps'},{id:'chest_03',sets:4,reps:'8 reps each side'},{id:'chest_04',sets:4,reps:'12 reps'},{id:'chest_07',sets:3,reps:'16 reps'},{id:'chest_06',sets:3,reps:'8 reps'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_01',sets:4,reps:'10 reps'},{id:'back_04',sets:3,reps:'10 reps'},{id:'back_05',sets:3,reps:'16 reps'},{id:'back_07',sets:3,reps:'12 reps'},{id:'back_02',sets:4,reps:'12 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_01',sets:3,reps:'20 sec'},{id:'core_02',sets:4,reps:'15 reps each side'},{id:'core_06',sets:3,reps:'30 sec'},{id:'core_07',sets:4,reps:'30 sec each side'},{id:'core_04',sets:3,reps:'14 reps'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_01',sets:4,reps:'8 reps'},{id:'legs_03',sets:3,reps:'20 sec'},{id:'legs_05',sets:3,reps:'12 reps'},{id:'legs_06',sets:4,reps:'12 reps'},{id:'legs_02',sets:4,reps:'12 reps'}]}
+]},
+// ── PHASE 2 ──────────────────────────────────────────────
+4:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_02',sets:6,reps:'12 reps each side'},{id:'chest_06',sets:3,reps:'8 reps'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_11',sets:3,reps:'16 reps'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_02',sets:4,reps:'12 reps each side'},{id:'back_06',sets:4,reps:'12 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_03',sets:3,reps:'Until Failure'},{id:'core_04',sets:3,reps:'14 reps'},{id:'core_05',sets:3,reps:'16 reps'},{id:'core_09',sets:3,reps:'20 sec'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_02',sets:4,reps:'12 reps'},{id:'legs_04',sets:4,reps:'12 reps'},{id:'legs_07',sets:3,reps:'12 reps'},{id:'legs_09',sets:3,reps:'16 reps'}]}
+]},
+5:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_02',sets:6,reps:'12 reps each side'},{id:'chest_06',sets:3,reps:'8 reps'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_11',sets:3,reps:'16 reps'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_02',sets:4,reps:'12 reps each side'},{id:'back_06',sets:4,reps:'12 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_03',sets:3,reps:'Until Failure'},{id:'core_04',sets:3,reps:'14 reps'},{id:'core_05',sets:3,reps:'16 reps'},{id:'core_09',sets:3,reps:'20 sec'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_02',sets:4,reps:'12 reps'},{id:'legs_04',sets:4,reps:'12 reps'},{id:'legs_07',sets:3,reps:'12 reps'},{id:'legs_09',sets:3,reps:'16 reps'}]}
+]},
+6:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_02',sets:6,reps:'12 reps each side'},{id:'chest_06',sets:3,reps:'8 reps'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_11',sets:3,reps:'16 reps'},{id:'chest_04',sets:4,reps:'12 reps'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_02',sets:4,reps:'12 reps each side'},{id:'back_06',sets:4,reps:'12 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_03',sets:3,reps:'Until Failure'},{id:'core_04',sets:3,reps:'14 reps'},{id:'core_05',sets:3,reps:'16 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_10',sets:3,reps:'16 reps'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_02',sets:4,reps:'12 reps'},{id:'legs_04',sets:4,reps:'12 reps'},{id:'legs_07',sets:3,reps:'12 reps'},{id:'legs_09',sets:3,reps:'16 reps'},{id:'legs_10',sets:4,reps:'12 reps each side'}]}
+]},
+// ── PHASE 3 ──────────────────────────────────────────────
+7:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_05',sets:4,reps:'Until Failure each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_12',sets:3,reps:'12 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_10',sets:3,reps:'16 reps'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_08',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_10',sets:4,reps:'12 reps each side'},{id:'legs_11',sets:4,reps:'12 reps each side'},{id:'legs_08',sets:4,reps:'Until Failure each side'},{id:'legs_14',sets:3,reps:'10 reps'}]}
+]},
+8:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_05',sets:4,reps:'Until Failure each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_12',sets:3,reps:'12 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_10',sets:3,reps:'16 reps'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_08',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_10',sets:4,reps:'12 reps each side'},{id:'legs_11',sets:4,reps:'12 reps each side'},{id:'legs_08',sets:4,reps:'Until Failure each side'},{id:'legs_14',sets:3,reps:'10 reps'}]}
+]},
+9:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_05',sets:4,reps:'Until Failure each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_10',sets:4,reps:'16 reps each side'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_10',sets:3,reps:'16 reps'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_08',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'},{id:'core_12',sets:3,reps:'14 reps'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_10',sets:4,reps:'12 reps each side'},{id:'legs_11',sets:4,reps:'12 reps each side'},{id:'legs_08',sets:4,reps:'Until Failure each side'},{id:'legs_14',sets:3,reps:'10 reps'},{id:'legs_12',sets:3,reps:'16 reps'}]}
+]},
+// ── PHASE 4 ──────────────────────────────────────────────
+10:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_10',sets:4,reps:'16 reps each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_05',sets:4,reps:'Until Failure each side'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_14',sets:3,reps:'12 reps'},{id:'core_15',sets:3,reps:'30 sec'},{id:'core_12',sets:3,reps:'14 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_11',sets:4,reps:'12 reps each side'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_15',sets:3,reps:'14 reps'},{id:'legs_16',sets:3,reps:'8 reps'},{id:'legs_13',sets:3,reps:'8 reps'},{id:'legs_20',sets:3,reps:'10 reps'},{id:'legs_17',sets:4,reps:'12 reps each side'}]}
+]},
+11:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_10',sets:4,reps:'16 reps each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_05',sets:4,reps:'Until Failure each side'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_14',sets:3,reps:'12 reps'},{id:'core_15',sets:3,reps:'30 sec'},{id:'core_12',sets:3,reps:'14 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_11',sets:4,reps:'12 reps each side'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_15',sets:3,reps:'14 reps'},{id:'legs_16',sets:3,reps:'8 reps'},{id:'legs_13',sets:3,reps:'8 reps'},{id:'legs_20',sets:3,reps:'10 reps'},{id:'legs_17',sets:4,reps:'12 reps each side'}]}
+]},
+12:{days:[
+  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
+    {id:'chest_10',sets:4,reps:'16 reps each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_05',sets:4,reps:'Until Failure each side'}]},
+  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
+    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'}]},
+  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
+    {id:'core_14',sets:3,reps:'12 reps'},{id:'core_15',sets:3,reps:'30 sec'},{id:'core_12',sets:3,reps:'14 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'}]},
+  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
+    {id:'legs_15',sets:3,reps:'14 reps'},{id:'legs_16',sets:3,reps:'8 reps'},{id:'legs_13',sets:3,reps:'8 reps'},{id:'legs_20',sets:3,reps:'10 reps'},{id:'legs_21',sets:4,reps:'12 reps each side'},{id:'legs_18',sets:3,reps:'12 reps'}]}
+]}
+};
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const allExs = [...EX.back,...EX.chest,...EX.core,...EX.legs];
+function getEx(id){return allExs.find(e=>e.id===id)}
+function getCat(id){return id.split('_')[0]}
+function getPhase(w){return PHASES.find(p=>p.weeks.includes(w))}
+
+let currentWeek=1, currentCat='all';
+
+// ═══════════════════════════════════════════
+// RENDER WEEK SELECTOR
+// ═══════════════════════════════════════════
+function renderWeekSelector(){
+  const sc=document.getElementById('weekScroll');
+  sc.innerHTML='';
+  for(let w=1;w<=12;w++){
+    const ph=getPhase(w);
+    const btn=document.createElement('button');
+    btn.className='wk'+(w===currentWeek?' active':'');
+    btn.innerHTML=`W${w}`;
+    btn.onclick=()=>selectWeek(w);
+    sc.appendChild(btn);
+  }
+}
+function selectWeek(w){
+  currentWeek=w;
+  document.querySelectorAll('.wk').forEach((b,i)=>b.classList.toggle('active',i+1===w));
+  const ph=getPhase(w);
+  document.getElementById('phase-display').textContent=ph?`${ph.emoji} ${ph.label}`:'';
+  renderDays();
+  // scroll selected week into view
+  const btns=document.querySelectorAll('.wk');
+  if(btns[w-1]) btns[w-1].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+// ═══════════════════════════════════════════
+// RENDER DAYS
+// ═══════════════════════════════════════════
+function renderDays(){
+  const grid=document.getElementById('daysGrid');
+  const weekData=PLAN[currentWeek];
+  if(!weekData){grid.innerHTML='<p style="padding:20px;color:var(--muted)">No data for this week</p>';return;}
+  const ph=getPhase(currentWeek);
+  grid.innerHTML='';
+  weekData.days.forEach((day,di)=>{
+    const card=document.createElement('div');
+    card.className='day-card'+(di===0?' open':'');
+    card.innerHTML=`
+      <div class="day-header" onclick="toggleDay(this.parentElement)">
+        <div class="day-label">
+          <div class="day-dot dot-${day.color}"></div>
+          <div>
+            <div class="day-title">${day.label} · ${day.title}</div>
+            <div class="day-sub">${day.exs.length} exercises${di===3?'  •  Can skip on 3-day split':''}</div>
+          </div>
+        </div>
+        <span class="day-chevron">⌄</span>
+      </div>
+      <div class="day-exercises">
+        ${day.exs.map((e,i)=>{
+          const ex=getEx(e.id);
+          if(!ex)return'';
+          return`<div class="ex-item" onclick="openModal('${ex.id}')">
+            <div class="ex-num num-${day.color}">${i+1}</div>
+            <div class="ex-info">
+              <div class="ex-name">${ex.name}</div>
+              <div class="ex-meta">${e.sets} sets · ${e.reps}</div>
+            </div>
+            <div class="ex-play">▶</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    grid.appendChild(card);
+  });
+  // update phase display
+  if(ph) document.getElementById('phase-display').textContent=`${ph.emoji} ${ph.label}`;
+}
+function toggleDay(card){card.classList.toggle('open')}
+
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+function openModal(id){
+  const ex=getEx(id);
+  if(!ex)return;
+  const cat=getCat(id);
+  const vid=document.getElementById('modalVideo');
+  const loading=document.getElementById('vidLoading');
+  vid.style.display='none';
+  loading.style.display='flex';
+  vid.src='clips/'+ex.file;
+  vid.load();
+  document.getElementById('modalTitle').textContent=ex.name;
+  document.getElementById('modalTags').innerHTML=`
+    <span class="tag c-${cat}">${cat.toUpperCase()}</span>
+    <span class="tag" style="border-color:var(--muted);color:var(--muted)">${ex.sets} sets</span>
+    <span class="tag" style="border-color:var(--muted);color:var(--muted)">${ex.reps} ${ex.unit!=='failure'?ex.unit:''}</span>
+    ${ex.note?`<span class="tag" style="border-color:var(--accent);color:var(--accent)">${ex.note}</span>`:''}
+  `;
+  document.getElementById('modalCues').innerHTML=ex.cues.map(c=>`<li>${c}</li>`).join('');
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  const vid=document.getElementById('modalVideo');
+  vid.pause();vid.src='';
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('modal').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+
+// ═══════════════════════════════════════════
+// LIBRARY
+// ═══════════════════════════════════════════
+function renderLib(cat='all',q=''){
+  const cont=document.getElementById('libContent');
+  const cats=cat==='all'?['back','chest','core','legs']:[cat];
+  let html='';
+  cats.forEach(c=>{
+    const list=EX[c].filter(e=>!q||e.name.toLowerCase().includes(q.toLowerCase()));
+    if(!list.length)return;
+    html+=`<div class="lib-cat-header"><div class="lib-cat-dot dot-${c}"></div>${c.charAt(0).toUpperCase()+c.slice(1)} (${list.length})</div>`;
+    html+=`<div class="lib-grid">`;
+    list.forEach(ex=>{
+      html+=`<div class="lib-card" onclick="openModal('${ex.id}')">
+        <div class="lib-thumb">
+          <video src="clips/${ex.file}" muted playsinline webkit-playsinline preload="none" style="width:100%;height:100%;object-fit:cover"></video>
+          <div class="lib-play-icon">▶</div>
+        </div>
+        <div class="lib-info">
+          <div class="lib-name">${ex.name}</div>
+          <div class="lib-meta">${ex.sets} sets · ${ex.reps} ${ex.unit!=='failure'?ex.unit:'to failure'}${ex.note?'  ·  '+ex.note:''}</div>
+        </div>
+        <div class="lib-arrow">›</div>
+      </div>`;
+    });
+    html+=`</div>`;
+    if(cats.indexOf(c)<cats.length-1) html+=`<div style="height:8px"></div>`;
+  });
+  if(!html) html=`<p style="padding:30px;text-align:center;color:var(--muted)">No exercises found for "${q}"</p>`;
+  cont.innerHTML=html;
+}
+function setCat(cat,el){
+  currentCat=cat;
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderLib(cat,document.getElementById('searchInput').value);
+}
+function filterLib(q){renderLib(currentCat,q)}
+
+// ═══════════════════════════════════════════
+// PANE SWITCHING
+// ═══════════════════════════════════════════
+function switchPane(name){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('pane-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(name==='library')renderLib(currentCat,'');
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderWeekSelector();
+selectWeek(1);
+renderLib('all','');
+
+// Swipe to close modal on iOS
+let touchStartY=0;
+document.getElementById('modal').addEventListener('touchstart',e=>touchStartY=e.touches[0].clientY,{passive:true});
+document.getElementById('modal').addEventListener('touchmove',e=>{
+  if(e.touches[0].clientY-touchStartY>80)closeModal();
+},{passive:true});
+</script>
+</body>
+</html>
