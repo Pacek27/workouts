@@ -623,7 +623,7 @@ function renderProgram(){
       const exsHtml = day.exs.map(function(e,i){
         const ex = getEx(e.id);
         if(!ex) return '';
-        return '<div class="ex-item" onclick="openModal(\''+ex.id+'\','+JSON.stringify(exIds)+','+i+')">'
+        return '<div class="ex-item" onclick="openModal(\''+ex.id+'\',\''+exIds.join(',')+'\',' +i+')">'
           +'<div class="ex-num num-'+day.color+'">'+( i+1)+'</div>'
           +'<div class="ex-info">'
           +'<div class="ex-name">'+ex.name+'</div>'
@@ -661,6 +661,7 @@ var _modalCtx = {exs:[], idx:0};
 
 function openModal(id, ctxExs, ctxIdx){
   if(ctxExs && ctxExs.length){
+    if(typeof ctxExs === 'string') ctxExs = ctxExs.split(',');
     _modalCtx.exs = ctxExs;
     _modalCtx.idx = (ctxIdx !== undefined) ? ctxIdx : ctxExs.indexOf(id);
   } else {
