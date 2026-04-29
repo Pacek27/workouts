@@ -116,62 +116,80 @@
   .note-badge{display:inline-block;background:rgba(249,115,22,.15);color:var(--accent);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:4px;border:1px solid rgba(249,115,22,.3)}
   /* VIDEO LOADING */
   .vid-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;font-size:24px}
+
+  /* WEEK SECTIONS */
+  .week-section{margin:14px 16px 0;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;background:var(--surface)}
+  .week-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+  .week-header-left{display:flex;align-items:center;gap:10px}
+  .week-num{font-size:16px;font-weight:700}
+  .week-chevron{font-size:18px;color:var(--muted);transition:.3s;flex-shrink:0}
+  .week-section.open .week-chevron{transform:rotate(180deg)}
+  .week-body{display:none;border-top:1px solid var(--border)}
+  .week-section.open .week-body{display:block}
+  .week-days{padding:12px;display:flex;flex-direction:column;gap:10px}
+  /* DAY CARD UPDATES */
+  .day-focus{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+  /* MODAL NAV */
+  .modal-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0;gap:12px}
+  .modal-nav-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.2s}
+  .modal-nav-btn:active{background:var(--accent);border-color:var(--accent);color:#000}
+  .modal-nav-btn:disabled{opacity:.25;pointer-events:none}
+  .modal-counter{font-size:13px;font-weight:600;color:var(--muted);flex:1;text-align:center}
+  /* DAY CARD SMALL UPDATES */
+  .day-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+
 </style>
-</head>
 <body>
 
 <!-- HEADER -->
 <div class="header">
   <div class="header-inner">
-    <h1>💪 Workout Program</h1>
-    <span id="phase-display" style="font-size:12px;font-weight:600;color:var(--muted)"></span>
+    <h1>&#x1F4AA; Workout Program</h1>
+    <span id="phase-display" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px"></span>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="switchPane('program')">📅 Program</button>
-    <button class="tab" onclick="switchPane('library')">📚 Exercise Library</button>
+    <button class="tab active" onclick="switchPane('program',event)">&#x1F4C5; Program</button>
+    <button class="tab" onclick="switchPane('library',event)">&#x1F4DA; Exercise Library</button>
   </div>
 </div>
 
 <div class="main">
 
-  <!-- ═══════════════ PROGRAM PANE ═══════════════ -->
+  <!-- PROGRAM PANE -->
   <div id="pane-program" class="pane active">
-
-    <!-- Week selector -->
-    <div class="week-bar">
-      <div class="week-scroll" id="weekScroll"></div>
-    </div>
-
-    <!-- Day cards -->
-    <div class="days-grid" id="daysGrid"></div>
-
+    <div id="programBody" style="padding-bottom:40px"></div>
   </div>
 
-  <!-- ═══════════════ LIBRARY PANE ═══════════════ -->
+  <!-- LIBRARY PANE -->
   <div id="pane-library" class="pane">
     <div class="lib-search">
-      <input class="search-input" type="search" placeholder="🔍  Search exercises…" oninput="filterLib(this.value)" id="searchInput">
+      <input class="search-input" type="search" placeholder="&#x1F50D;  Search exercises&hellip;" oninput="filterLib(this.value)" id="searchInput">
     </div>
     <div class="cat-tabs">
       <button class="cat-tab active" data-cat="all" onclick="setCat('all',this)">All (66)</button>
-      <button class="cat-tab" data-cat="back" onclick="setCat('back',this)">🔵 Back (12)</button>
-      <button class="cat-tab" data-cat="chest" onclick="setCat('chest',this)">🔴 Chest (14)</button>
-      <button class="cat-tab" data-cat="core" onclick="setCat('core',this)">🟢 Core (15)</button>
-      <button class="cat-tab" data-cat="legs" onclick="setCat('legs',this)">🟣 Legs (25)</button>
+      <button class="cat-tab" data-cat="back" onclick="setCat('back',this)">&#x1F535; Back (12)</button>
+      <button class="cat-tab" data-cat="chest" onclick="setCat('chest',this)">&#x1F534; Chest (14)</button>
+      <button class="cat-tab" data-cat="core" onclick="setCat('core',this)">&#x1F7E2; Core (15)</button>
+      <button class="cat-tab" data-cat="legs" onclick="setCat('legs',this)">&#x1F7E3; Legs (25)</button>
     </div>
     <div class="lib-section" id="libContent"></div>
   </div>
 
 </div>
 
-<!-- ═══════════════ EXERCISE MODAL ═══════════════ -->
+<!-- EXERCISE MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal-close">
     <h2 id="modalTitle"></h2>
-    <button class="close-btn" onclick="closeModal()">✕</button>
+    <button class="close-btn" onclick="closeModal()">&#x2715;</button>
+  </div>
+  <div class="modal-nav">
+    <button class="modal-nav-btn" id="modalPrev" onclick="modalNav(-1)">&#x2039;</button>
+    <span class="modal-counter" id="modalCounter"></span>
+    <button class="modal-nav-btn" id="modalNext" onclick="modalNav(1)">&#x203A;</button>
   </div>
   <div class="modal-video">
-    <div class="vid-loading" id="vidLoading">⏳</div>
+    <div class="vid-loading" id="vidLoading">&#x23F3;</div>
     <video id="modalVideo" playsinline webkit-playsinline muted loop controls
       style="display:none"
       oncanplay="document.getElementById('vidLoading').style.display='none';this.style.display='block';this.play()">
@@ -266,290 +284,498 @@ legs:[
 };
 
 // ═══════════════════════════════════════════
-// 12-WEEK PROGRESSIVE PLAN
+// EXERCISE DIFFICULTY RANKING (1=easiest)
+// Phase 1 (W1-2): bilateral, stable, basic patterns
+// Phase 2 (W3-4): unilateral intro, rotation, more volume
+// Phase 3 (W5-6): explosive, to-failure, complex coordination
 // ═══════════════════════════════════════════
+
 const PHASES = [
-  {weeks:[1,2,3], label:'Phase 1 – Foundation', cls:'phase-1', emoji:'🌱'},
-  {weeks:[4,5,6], label:'Phase 2 – Build',       cls:'phase-2', emoji:'⚡'},
-  {weeks:[7,8,9], label:'Phase 3 – Strength',    cls:'phase-3', emoji:'🔥'},
-  {weeks:[10,11,12],label:'Phase 4 – Elite',     cls:'phase-4', emoji:'💎'}
+  {weeks:[1,2], label:'Phase 1 \u2013 Foundation', cls:'phase-1', emoji:'\ud83c\udf31', desc:'Technique \u00b7 Stability \u00b7 Bilateral'},
+  {weeks:[3,4], label:'Phase 2 \u2013 Build',       cls:'phase-2', emoji:'\u26a1',      desc:'Unilateral \u00b7 Rotation \u00b7 Volume'},
+  {weeks:[5,6], label:'Phase 3 \u2013 Strength',    cls:'phase-3', emoji:'\ud83d\udd25', desc:'Explosive \u00b7 Complex \u00b7 Max Effort'}
 ];
 
+// ═══════════════════════════════════════════
+// 6-WEEK PROGRESSIVE PLAN
+// Split: Day1=Push+Core | Day2=Pull+Hinge | Day3=Legs+Core | Day4=Optional
+// ═══════════════════════════════════════════
 const PLAN = {
-// ── PHASE 1 ──────────────────────────────────────────────
+
+// ── PHASE 1: FOUNDATION ──────────────────────────────────────────────────────
+// Goal: Learn movement patterns, bilateral stability, technique focus
+// Exercises: most stable, both feet on ground, standard grips
+
 1:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_01',sets:3,reps:'12 reps'},{id:'chest_03',sets:4,reps:'8 reps each side'},{id:'chest_04',sets:4,reps:'12 reps'},{id:'chest_07',sets:3,reps:'16 reps'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_01',sets:4,reps:'10 reps'},{id:'back_04',sets:3,reps:'10 reps'},{id:'back_05',sets:3,reps:'16 reps'},{id:'back_07',sets:3,reps:'12 reps'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_01',sets:3,reps:'20 sec'},{id:'core_02',sets:4,reps:'15 reps each side'},{id:'core_06',sets:3,reps:'30 sec'},{id:'core_07',sets:4,reps:'30 sec each side'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_01',sets:4,reps:'8 reps'},{id:'legs_03',sets:3,reps:'20 sec'},{id:'legs_05',sets:3,reps:'12 reps'},{id:'legs_06',sets:4,reps:'12 reps'}]}
+  {label:'Day 1', title:'Push + Core',
+   focus:'Chest \u00b7 Stability Push \u00b7 Core Carry',  color:'chest',
+   exs:[
+     {id:'chest_01',sets:3,reps:'12 reps'},
+     {id:'chest_07',sets:3,reps:'16 reps'},
+     {id:'chest_04',sets:3,reps:'12 reps'},
+     {id:'back_10', sets:3,reps:'16 reps'},
+     {id:'core_07', sets:3,reps:'30 sec/side'}
+   ]},
+  {label:'Day 2', title:'Pull + Hinge',
+   focus:'Rows \u00b7 Posterior Chain \u00b7 Core Rotation', color:'back',
+   exs:[
+     {id:'back_01',sets:4,reps:'10 reps'},
+     {id:'back_05',sets:3,reps:'16 reps'},
+     {id:'back_07',sets:3,reps:'12 reps'},
+     {id:'legs_06',sets:3,reps:'12 reps'},
+     {id:'core_13',sets:3,reps:'12 reps'}
+   ]},
+  {label:'Day 3', title:'Legs + Core',
+   focus:'Squat \u00b7 Lunge \u00b7 Hinge \u00b7 Plank', color:'legs',
+   exs:[
+     {id:'legs_01',sets:4,reps:'8 reps'},
+     {id:'legs_05',sets:3,reps:'12 reps'},
+     {id:'legs_14',sets:3,reps:'10 reps'},
+     {id:'legs_03',sets:3,reps:'20 sec'},
+     {id:'core_06',sets:3,reps:'30 sec'}
+   ]},
+  {label:'Day 4', title:'Optional \u2014 Core & Rotation',
+   focus:'Rotation \u00b7 Light Legs \u00b7 Core Variety', color:'core', optional:true,
+   exs:[
+     {id:'core_01',sets:3,reps:'20 sec'},
+     {id:'core_02',sets:3,reps:'15 reps/side'},
+     {id:'core_04',sets:3,reps:'14 reps'},
+     {id:'legs_16',sets:3,reps:'8 reps'},
+     {id:'core_09',sets:3,reps:'20 sec'}
+   ]}
 ]},
+
 2:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_01',sets:3,reps:'12 reps'},{id:'chest_03',sets:4,reps:'8 reps each side'},{id:'chest_04',sets:4,reps:'12 reps'},{id:'chest_07',sets:3,reps:'16 reps'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_01',sets:4,reps:'10 reps'},{id:'back_04',sets:3,reps:'10 reps'},{id:'back_05',sets:3,reps:'16 reps'},{id:'back_07',sets:3,reps:'12 reps'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_01',sets:3,reps:'20 sec'},{id:'core_02',sets:4,reps:'15 reps each side'},{id:'core_06',sets:3,reps:'30 sec'},{id:'core_07',sets:4,reps:'30 sec each side'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_01',sets:4,reps:'8 reps'},{id:'legs_03',sets:3,reps:'20 sec'},{id:'legs_05',sets:3,reps:'12 reps'},{id:'legs_06',sets:4,reps:'12 reps'}]}
+  {label:'Day 1', title:'Push + Core',
+   focus:'Chest \u00b7 Push Variety \u00b7 Core Carry', color:'chest',
+   exs:[
+     {id:'chest_01',sets:3,reps:'14 reps'},
+     {id:'chest_07',sets:4,reps:'16 reps'},
+     {id:'chest_04',sets:4,reps:'12 reps'},
+     {id:'back_10', sets:3,reps:'16 reps'},
+     {id:'chest_06',sets:3,reps:'8 reps'},
+     {id:'core_07', sets:3,reps:'30 sec/side'}
+   ]},
+  {label:'Day 2', title:'Pull + Hinge',
+   focus:'Rows \u00b7 Landmine Pull \u00b7 Posterior Chain', color:'back',
+   exs:[
+     {id:'back_01',sets:4,reps:'10 reps'},
+     {id:'back_05',sets:4,reps:'16 reps'},
+     {id:'back_07',sets:3,reps:'12 reps'},
+     {id:'legs_06',sets:4,reps:'12 reps'},
+     {id:'back_04',sets:3,reps:'10 reps'},
+     {id:'core_13',sets:3,reps:'12 reps'}
+   ]},
+  {label:'Day 3', title:'Legs + Core',
+   focus:'Squat \u00b7 Lunge \u00b7 Hinge \u00b7 Plank', color:'legs',
+   exs:[
+     {id:'legs_01',sets:4,reps:'10 reps'},
+     {id:'legs_05',sets:3,reps:'12 reps'},
+     {id:'legs_14',sets:3,reps:'10 reps'},
+     {id:'legs_16',sets:3,reps:'8 reps'},
+     {id:'legs_03',sets:3,reps:'20 sec'},
+     {id:'core_06',sets:3,reps:'30 sec'}
+   ]},
+  {label:'Day 4', title:'Optional \u2014 Core & Conditioning',
+   focus:'Rotation \u00b7 Core Variety \u00b7 Light Legs', color:'core', optional:true,
+   exs:[
+     {id:'core_01',sets:3,reps:'20 sec'},
+     {id:'core_02',sets:3,reps:'15 reps/side'},
+     {id:'core_04',sets:3,reps:'14 reps'},
+     {id:'core_09',sets:3,reps:'20 sec'},
+     {id:'core_14',sets:3,reps:'12 reps'}
+   ]}
 ]},
+
+// ── PHASE 2: BUILD ────────────────────────────────────────────────────────────
+// Goal: Introduce unilateral work, rotational patterns, more complexity
+// Exercises: single-arm/leg, cable/band resistance, rotation drills
+
 3:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_01',sets:3,reps:'12 reps'},{id:'chest_03',sets:4,reps:'8 reps each side'},{id:'chest_04',sets:4,reps:'12 reps'},{id:'chest_07',sets:3,reps:'16 reps'},{id:'chest_06',sets:3,reps:'8 reps'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_01',sets:4,reps:'10 reps'},{id:'back_04',sets:3,reps:'10 reps'},{id:'back_05',sets:3,reps:'16 reps'},{id:'back_07',sets:3,reps:'12 reps'},{id:'back_02',sets:4,reps:'12 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_01',sets:3,reps:'20 sec'},{id:'core_02',sets:4,reps:'15 reps each side'},{id:'core_06',sets:3,reps:'30 sec'},{id:'core_07',sets:4,reps:'30 sec each side'},{id:'core_04',sets:3,reps:'14 reps'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_01',sets:4,reps:'8 reps'},{id:'legs_03',sets:3,reps:'20 sec'},{id:'legs_05',sets:3,reps:'12 reps'},{id:'legs_06',sets:4,reps:'12 reps'},{id:'legs_02',sets:4,reps:'12 reps'}]}
+  {label:'Day 1', title:'Push + Core',
+   focus:'Unilateral Press \u00b7 Plate Rotation \u00b7 Cable Rows', color:'chest',
+   exs:[
+     {id:'chest_03',sets:4,reps:'8 reps/side'},
+     {id:'chest_11',sets:3,reps:'16 reps'},
+     {id:'chest_04',sets:3,reps:'12 reps'},
+     {id:'back_11',sets:3,reps:'16 reps'},
+     {id:'core_10',sets:3,reps:'16 reps'}
+   ]},
+  {label:'Day 2', title:'Pull + Hinge',
+   focus:'Rotating Rows \u00b7 Power Hinge \u00b7 Landmine Core', color:'back',
+   exs:[
+     {id:'back_02',sets:4,reps:'12 reps/side'},
+     {id:'back_04',sets:3,reps:'10 reps'},
+     {id:'back_07',sets:3,reps:'12 reps'},
+     {id:'legs_25',sets:3,reps:'14 reps'},
+     {id:'core_05',sets:3,reps:'16 reps'}
+   ]},
+  {label:'Day 3', title:'Legs + Core',
+   focus:'Front Squat \u00b7 Rotation Lunges \u00b7 Banded Steps', color:'legs',
+   exs:[
+     {id:'legs_23',sets:3,reps:'12 reps'},
+     {id:'legs_09',sets:3,reps:'16 reps'},
+     {id:'legs_17',sets:4,reps:'12 reps/side'},
+     {id:'legs_06',sets:3,reps:'12 reps'},
+     {id:'core_04',sets:3,reps:'14 reps'}
+   ]},
+  {label:'Day 4', title:'Optional \u2014 Lower Power',
+   focus:'Plyometric \u00b7 KB Swings \u00b7 Deep Squat', color:'legs', optional:true,
+   exs:[
+     {id:'legs_07',sets:3,reps:'12 reps'},
+     {id:'legs_15',sets:3,reps:'14 reps'},
+     {id:'legs_24',sets:3,reps:'8 reps'},
+     {id:'core_02',sets:3,reps:'15 reps/side'},
+     {id:'core_09',sets:3,reps:'20 sec'}
+   ]}
 ]},
-// ── PHASE 2 ──────────────────────────────────────────────
+
 4:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_02',sets:6,reps:'12 reps each side'},{id:'chest_06',sets:3,reps:'8 reps'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_11',sets:3,reps:'16 reps'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_02',sets:4,reps:'12 reps each side'},{id:'back_06',sets:4,reps:'12 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_03',sets:3,reps:'Until Failure'},{id:'core_04',sets:3,reps:'14 reps'},{id:'core_05',sets:3,reps:'16 reps'},{id:'core_09',sets:3,reps:'20 sec'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_02',sets:4,reps:'12 reps'},{id:'legs_04',sets:4,reps:'12 reps'},{id:'legs_07',sets:3,reps:'12 reps'},{id:'legs_09',sets:3,reps:'16 reps'}]}
+  {label:'Day 1', title:'Push + Core',
+   focus:'Med Ball Push \u00b7 One-Arm Press \u00b7 Rotation Push', color:'chest',
+   exs:[
+     {id:'chest_09',sets:4,reps:'12 reps/side'},
+     {id:'chest_13',sets:4,reps:'12 reps/side'},
+     {id:'chest_11',sets:3,reps:'16 reps'},
+     {id:'back_02',sets:4,reps:'12 reps/side'},
+     {id:'core_11',sets:4,reps:'12 reps/side'}
+   ]},
+  {label:'Day 2', title:'Pull + Hinge',
+   focus:'Shoulder Pull-Press \u00b7 Cable Rows \u00b7 KB Power', color:'back',
+   exs:[
+     {id:'back_06',sets:4,reps:'12 reps/side'},
+     {id:'back_02',sets:4,reps:'12 reps/side'},
+     {id:'back_11',sets:3,reps:'16 reps'},
+     {id:'legs_24',sets:4,reps:'8 reps'},
+     {id:'core_05',sets:3,reps:'16 reps'}
+   ]},
+  {label:'Day 3', title:'Legs + Core',
+   focus:'Jumped Lunges \u00b7 Banded Steps \u00b7 KB Swings', color:'legs',
+   exs:[
+     {id:'legs_04',sets:4,reps:'12 reps'},
+     {id:'legs_09',sets:3,reps:'16 reps'},
+     {id:'legs_17',sets:4,reps:'12 reps/side'},
+     {id:'legs_25',sets:3,reps:'14 reps'},
+     {id:'core_12',sets:3,reps:'14 reps'}
+   ]},
+  {label:'Day 4', title:'Optional \u2014 Conditioning',
+   focus:'Plyometric \u00b7 360s \u00b7 Stepover Lifts', color:'core', optional:true,
+   exs:[
+     {id:'legs_07',sets:3,reps:'12 reps'},
+     {id:'legs_02',sets:4,reps:'12 reps'},
+     {id:'legs_18',sets:3,reps:'12 reps'},
+     {id:'core_10',sets:3,reps:'16 reps'},
+     {id:'core_14',sets:3,reps:'12 reps'}
+   ]}
 ]},
+
+// ── PHASE 3: STRENGTH ─────────────────────────────────────────────────────────
+// Goal: Maximum intensity, explosive work, to-failure sets, complex coordination
+// Exercises: ring-based, one-arm push-ups, jumping, complex multi-joint
+
 5:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_02',sets:6,reps:'12 reps each side'},{id:'chest_06',sets:3,reps:'8 reps'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_11',sets:3,reps:'16 reps'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_02',sets:4,reps:'12 reps each side'},{id:'back_06',sets:4,reps:'12 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_03',sets:3,reps:'Until Failure'},{id:'core_04',sets:3,reps:'14 reps'},{id:'core_05',sets:3,reps:'16 reps'},{id:'core_09',sets:3,reps:'20 sec'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_02',sets:4,reps:'12 reps'},{id:'legs_04',sets:4,reps:'12 reps'},{id:'legs_07',sets:3,reps:'12 reps'},{id:'legs_09',sets:3,reps:'16 reps'}]}
+  {label:'Day 1', title:'Push + Core',
+   focus:'Ring Push \u00b7 One-Arm \u00b7 Power Push \u00b7 Rotation', color:'chest',
+   exs:[
+     {id:'chest_14',sets:3,reps:'8 reps'},
+     {id:'chest_05',sets:4,reps:'Until Failure/side'},
+     {id:'chest_02',sets:6,reps:'12 reps/side'},
+     {id:'back_09', sets:4,reps:'16 reps/side'},
+     {id:'core_03', sets:3,reps:'Until Failure'}
+   ]},
+  {label:'Day 2', title:'Pull + Hinge',
+   focus:'Ring Rows \u00b7 Superman Pull \u00b7 Plank Throws', color:'back',
+   exs:[
+     {id:'back_03',sets:4,reps:'Until Failure/side'},
+     {id:'back_08',sets:4,reps:'12 reps/side'},
+     {id:'back_12',sets:3,reps:'12 reps/side'},
+     {id:'legs_22',sets:3,reps:'12 reps'},
+     {id:'core_15',sets:3,reps:'30 sec'}
+   ]},
+  {label:'Day 3', title:'Legs + Core',
+   focus:'Single-Leg Power \u00b7 KB Anchors \u00b7 Complex Lunges', color:'legs',
+   exs:[
+     {id:'legs_08',sets:4,reps:'Until Failure/side'},
+     {id:'legs_10',sets:4,reps:'12 reps/side'},
+     {id:'legs_11',sets:4,reps:'12 reps/side'},
+     {id:'legs_13',sets:3,reps:'8 reps'},
+     {id:'core_08',sets:4,reps:'12 reps/side'}
+   ]},
+  {label:'Day 4', title:'Optional \u2014 Full Body Power',
+   focus:'Explosive \u00b7 Rotation \u00b7 Complex Push', color:'core', optional:true,
+   exs:[
+     {id:'legs_04', sets:4,reps:'12 reps'},
+     {id:'legs_21', sets:4,reps:'12 reps/side'},
+     {id:'back_06', sets:4,reps:'12 reps/side'},
+     {id:'core_11', sets:4,reps:'12 reps/side'},
+     {id:'core_15', sets:3,reps:'30 sec'}
+   ]}
 ]},
+
 6:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_02',sets:6,reps:'12 reps each side'},{id:'chest_06',sets:3,reps:'8 reps'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_11',sets:3,reps:'16 reps'},{id:'chest_04',sets:4,reps:'12 reps'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_02',sets:4,reps:'12 reps each side'},{id:'back_06',sets:4,reps:'12 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_03',sets:3,reps:'Until Failure'},{id:'core_04',sets:3,reps:'14 reps'},{id:'core_05',sets:3,reps:'16 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_10',sets:3,reps:'16 reps'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_02',sets:4,reps:'12 reps'},{id:'legs_04',sets:4,reps:'12 reps'},{id:'legs_07',sets:3,reps:'12 reps'},{id:'legs_09',sets:3,reps:'16 reps'},{id:'legs_10',sets:4,reps:'12 reps each side'}]}
-]},
-// ── PHASE 3 ──────────────────────────────────────────────
-7:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_05',sets:4,reps:'Until Failure each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_12',sets:3,reps:'12 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_10',sets:3,reps:'16 reps'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_08',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_10',sets:4,reps:'12 reps each side'},{id:'legs_11',sets:4,reps:'12 reps each side'},{id:'legs_08',sets:4,reps:'Until Failure each side'},{id:'legs_14',sets:3,reps:'10 reps'}]}
-]},
-8:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_05',sets:4,reps:'Until Failure each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_12',sets:3,reps:'12 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_10',sets:3,reps:'16 reps'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_08',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_10',sets:4,reps:'12 reps each side'},{id:'legs_11',sets:4,reps:'12 reps each side'},{id:'legs_08',sets:4,reps:'Until Failure each side'},{id:'legs_14',sets:3,reps:'10 reps'}]}
-]},
-9:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_05',sets:4,reps:'Until Failure each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_10',sets:4,reps:'16 reps each side'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_10',sets:3,reps:'16 reps'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_10',sets:3,reps:'16 reps'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_08',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'},{id:'core_12',sets:3,reps:'14 reps'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_10',sets:4,reps:'12 reps each side'},{id:'legs_11',sets:4,reps:'12 reps each side'},{id:'legs_08',sets:4,reps:'Until Failure each side'},{id:'legs_14',sets:3,reps:'10 reps'},{id:'legs_12',sets:3,reps:'16 reps'}]}
-]},
-// ── PHASE 4 ──────────────────────────────────────────────
-10:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_10',sets:4,reps:'16 reps each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_05',sets:4,reps:'Until Failure each side'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_14',sets:3,reps:'12 reps'},{id:'core_15',sets:3,reps:'30 sec'},{id:'core_12',sets:3,reps:'14 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_11',sets:4,reps:'12 reps each side'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_15',sets:3,reps:'14 reps'},{id:'legs_16',sets:3,reps:'8 reps'},{id:'legs_13',sets:3,reps:'8 reps'},{id:'legs_20',sets:3,reps:'10 reps'},{id:'legs_17',sets:4,reps:'12 reps each side'}]}
-]},
-11:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_10',sets:4,reps:'16 reps each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_05',sets:4,reps:'Until Failure each side'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_14',sets:3,reps:'12 reps'},{id:'core_15',sets:3,reps:'30 sec'},{id:'core_12',sets:3,reps:'14 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_11',sets:4,reps:'12 reps each side'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_15',sets:3,reps:'14 reps'},{id:'legs_16',sets:3,reps:'8 reps'},{id:'legs_13',sets:3,reps:'8 reps'},{id:'legs_20',sets:3,reps:'10 reps'},{id:'legs_17',sets:4,reps:'12 reps each side'}]}
-]},
-12:{days:[
-  {label:'Day 1',cat:'chest',title:'Chest',color:'chest',exs:[
-    {id:'chest_10',sets:4,reps:'16 reps each side'},{id:'chest_12',sets:3,reps:'14 reps'},{id:'chest_13',sets:4,reps:'12 reps each side'},{id:'chest_09',sets:4,reps:'12 reps each side'},{id:'chest_08',sets:4,reps:'Until Failure each side'},{id:'chest_05',sets:4,reps:'Until Failure each side'}]},
-  {label:'Day 2',cat:'back',title:'Back',color:'back',exs:[
-    {id:'back_03',sets:4,reps:'Until Failure each side'},{id:'back_12',sets:3,reps:'12 reps each side'},{id:'back_11',sets:3,reps:'16 reps'},{id:'back_10',sets:3,reps:'16 reps'},{id:'back_09',sets:4,reps:'16 reps each side'},{id:'back_08',sets:4,reps:'12 reps each side'}]},
-  {label:'Day 3',cat:'core',title:'Core',color:'core',exs:[
-    {id:'core_14',sets:3,reps:'12 reps'},{id:'core_15',sets:3,reps:'30 sec'},{id:'core_12',sets:3,reps:'14 reps'},{id:'core_09',sets:3,reps:'20 sec'},{id:'core_11',sets:4,reps:'12 reps each side'},{id:'core_13',sets:3,reps:'12 reps'}]},
-  {label:'Day 4',cat:'legs',title:'Legs',color:'legs',exs:[
-    {id:'legs_15',sets:3,reps:'14 reps'},{id:'legs_16',sets:3,reps:'8 reps'},{id:'legs_13',sets:3,reps:'8 reps'},{id:'legs_20',sets:3,reps:'10 reps'},{id:'legs_21',sets:4,reps:'12 reps each side'},{id:'legs_18',sets:3,reps:'12 reps'}]}
+  {label:'Day 1', title:'Push + Core',
+   focus:'Power Push \u00b7 Ring \u00b7 Cable Pull-Press \u00b7 Max', color:'chest',
+   exs:[
+     {id:'chest_08',sets:4,reps:'Until Failure/side'},
+     {id:'chest_02',sets:6,reps:'12 reps/side'},
+     {id:'chest_05',sets:4,reps:'Until Failure/side'},
+     {id:'chest_10',sets:4,reps:'16 reps/side'},
+     {id:'core_03', sets:3,reps:'Until Failure'},
+     {id:'core_15', sets:3,reps:'30 sec'}
+   ]},
+  {label:'Day 2', title:'Pull + Hinge',
+   focus:'Ring Rows \u00b7 Cable Pull \u00b7 Complex Back', color:'back',
+   exs:[
+     {id:'back_03',sets:4,reps:'Until Failure/side'},
+     {id:'back_09',sets:4,reps:'16 reps/side'},
+     {id:'back_12',sets:3,reps:'12 reps/side'},
+     {id:'back_08',sets:4,reps:'12 reps/side'},
+     {id:'legs_22',sets:3,reps:'12 reps'},
+     {id:'core_15',sets:3,reps:'30 sec'}
+   ]},
+  {label:'Day 3', title:'Legs + Core',
+   focus:'Complex Squats \u00b7 KB Power \u00b7 Rotation Lunges', color:'legs',
+   exs:[
+     {id:'legs_20',sets:3,reps:'10 reps'},
+     {id:'legs_10',sets:4,reps:'12 reps/side'},
+     {id:'legs_08',sets:4,reps:'Until Failure/side'},
+     {id:'legs_21',sets:4,reps:'12 reps/side'},
+     {id:'legs_19',sets:3,reps:'12 reps'},
+     {id:'core_12',sets:3,reps:'14 reps'}
+   ]},
+  {label:'Day 4', title:'Optional \u2014 Elite Challenge',
+   focus:'Max Lunges \u00b7 Complex Back \u00b7 KB Rotation', color:'core', optional:true,
+   exs:[
+     {id:'legs_11',sets:4,reps:'12 reps/side'},
+     {id:'legs_12',sets:3,reps:'16 reps'},
+     {id:'back_06',sets:4,reps:'12 reps/side'},
+     {id:'chest_12',sets:3,reps:'14 reps'},
+     {id:'core_11',sets:4,reps:'12 reps/side'}
+   ]}
 ]}
-};
+
+}; // end PLAN
 
 // ═══════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════
-const allExs = [...EX.back,...EX.chest,...EX.core,...EX.legs];
+const allExs=[...EX.back,...EX.chest,...EX.core,...EX.legs];
 function getEx(id){return allExs.find(e=>e.id===id)}
 function getCat(id){return id.split('_')[0]}
 function getPhase(w){return PHASES.find(p=>p.weeks.includes(w))}
 
-let currentWeek=1, currentCat='all';
+let currentCat='all';
 
 // ═══════════════════════════════════════════
-// RENDER WEEK SELECTOR
+// RENDER PROGRAM (all weeks collapsible)
 // ═══════════════════════════════════════════
-function renderWeekSelector(){
-  const sc=document.getElementById('weekScroll');
-  sc.innerHTML='';
-  for(let w=1;w<=12;w++){
-    const ph=getPhase(w);
-    const btn=document.createElement('button');
-    btn.className='wk'+(w===currentWeek?' active':'');
-    btn.innerHTML=`W${w}`;
-    btn.onclick=()=>selectWeek(w);
-    sc.appendChild(btn);
+function renderProgram(){
+  const body = document.getElementById('programBody');
+  body.innerHTML = '';
+
+  // Phase dividers + week sections
+  let lastPhaseIdx = -1;
+
+  for(let w=1; w<=6; w++){
+    const ph = getPhase(w);
+    const phIdx = PHASES.indexOf(ph);
+
+    // Phase header (only once per phase)
+    if(phIdx !== lastPhaseIdx){
+      lastPhaseIdx = phIdx;
+      const phDiv = document.createElement('div');
+      phDiv.style.cssText = 'padding:18px 16px 6px;';
+      phDiv.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">'
+        + ph.emoji + '  ' + ph.label + '  \u00b7  ' + ph.desc + '</div>';
+      body.appendChild(phDiv);
+    }
+
+    const weekData = PLAN[w];
+    const sec = document.createElement('div');
+    sec.className = 'week-section' + (w===1?' open':'');
+    sec.id = 'week-'+w;
+
+    const exCount = weekData.days.reduce(function(s,d){return s+d.exs.length},0);
+
+    sec.innerHTML =
+      '<div class="week-header" onclick="toggleWeek(this.parentElement)">'
+      + '<div class="week-header-left">'
+      + '<span class="week-num">Week '+w+'</span>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:11px;color:var(--muted)">'+exCount+' exercises</span>'
+      + '<span class="week-chevron">\u2304</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="week-body">'
+      + '<div class="week-days" id="days-w'+w+'"></div>'
+      + '</div>';
+
+    body.appendChild(sec);
+
+    // Render day cards
+    const daysEl = sec.querySelector('.week-days');
+    weekData.days.forEach(function(day, di){
+      const card = document.createElement('div');
+      card.className = 'day-card' + (w===1&&di===0?' open':'');
+
+      const exIds = day.exs.map(function(e){return e.id});
+      const exsHtml = day.exs.map(function(e,i){
+        const ex = getEx(e.id);
+        if(!ex) return '';
+        return '<div class="ex-item" onclick="openModal(\''+ex.id+'\','+JSON.stringify(exIds)+','+i+')">'
+          +'<div class="ex-num num-'+day.color+'">'+( i+1)+'</div>'
+          +'<div class="ex-info">'
+          +'<div class="ex-name">'+ex.name+'</div>'
+          +'<div class="ex-meta">'+e.sets+' sets \u00b7 '+e.reps+'</div>'
+          +'</div>'
+          +'<div class="ex-play">\u25b6</div>'
+          +'</div>';
+      }).join('');
+
+      card.innerHTML =
+        '<div class="day-header" onclick="toggleDay(this.parentElement)">'
+        +'<div class="day-label">'
+        +'<div class="day-dot dot-'+day.color+'"></div>'
+        +'<div>'
+        +'<div class="day-title">'+day.label+' \u00b7 '+day.title+'</div>'
+        +'<div class="day-focus">'+day.focus+'</div>'
+        +'<div class="day-sub">'+day.exs.length+' exercises'+(day.optional?' \u00b7 \u2b50 Optional':'')+'</div>'
+        +'</div></div>'
+        +'<span class="day-chevron">\u2304</span>'
+        +'</div>'
+        +'<div class="day-exercises">'+exsHtml+'</div>';
+
+      daysEl.appendChild(card);
+    });
   }
 }
-function selectWeek(w){
-  currentWeek=w;
-  document.querySelectorAll('.wk').forEach((b,i)=>b.classList.toggle('active',i+1===w));
-  const ph=getPhase(w);
-  document.getElementById('phase-display').textContent=ph?`${ph.emoji} ${ph.label}`:'';
-  renderDays();
-  // scroll selected week into view
-  const btns=document.querySelectorAll('.wk');
-  if(btns[w-1]) btns[w-1].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-}
 
-// ═══════════════════════════════════════════
-// RENDER DAYS
-// ═══════════════════════════════════════════
-function renderDays(){
-  const grid=document.getElementById('daysGrid');
-  const weekData=PLAN[currentWeek];
-  if(!weekData){grid.innerHTML='<p style="padding:20px;color:var(--muted)">No data for this week</p>';return;}
-  const ph=getPhase(currentWeek);
-  grid.innerHTML='';
-  weekData.days.forEach((day,di)=>{
-    const card=document.createElement('div');
-    card.className='day-card'+(di===0?' open':'');
-    card.innerHTML=`
-      <div class="day-header" onclick="toggleDay(this.parentElement)">
-        <div class="day-label">
-          <div class="day-dot dot-${day.color}"></div>
-          <div>
-            <div class="day-title">${day.label} · ${day.title}</div>
-            <div class="day-sub">${day.exs.length} exercises${di===3?'  •  Can skip on 3-day split':''}</div>
-          </div>
-        </div>
-        <span class="day-chevron">⌄</span>
-      </div>
-      <div class="day-exercises">
-        ${day.exs.map((e,i)=>{
-          const ex=getEx(e.id);
-          if(!ex)return'';
-          return`<div class="ex-item" onclick="openModal('${ex.id}')">
-            <div class="ex-num num-${day.color}">${i+1}</div>
-            <div class="ex-info">
-              <div class="ex-name">${ex.name}</div>
-              <div class="ex-meta">${e.sets} sets · ${e.reps}</div>
-            </div>
-            <div class="ex-play">▶</div>
-          </div>`;
-        }).join('')}
-      </div>`;
-    grid.appendChild(card);
-  });
-  // update phase display
-  if(ph) document.getElementById('phase-display').textContent=`${ph.emoji} ${ph.label}`;
-}
+function toggleWeek(sec){sec.classList.toggle('open')}
 function toggleDay(card){card.classList.toggle('open')}
 
 // ═══════════════════════════════════════════
-// MODAL
+// MODAL + SWIPE NAVIGATION
 // ═══════════════════════════════════════════
-function openModal(id){
-  const ex=getEx(id);
-  if(!ex)return;
-  const cat=getCat(id);
-  const vid=document.getElementById('modalVideo');
-  const loading=document.getElementById('vidLoading');
+var _modalCtx = {exs:[], idx:0};
+
+function openModal(id, ctxExs, ctxIdx){
+  if(ctxExs && ctxExs.length){
+    _modalCtx.exs = ctxExs;
+    _modalCtx.idx = (ctxIdx !== undefined) ? ctxIdx : ctxExs.indexOf(id);
+  } else {
+    _modalCtx.exs = [id];
+    _modalCtx.idx = 0;
+  }
+  _renderModal(id);
+}
+
+function _renderModal(id){
+  const ex = getEx(id);
+  if(!ex) return;
+  const cat = getCat(id);
+  const vid = document.getElementById('modalVideo');
+  const loading = document.getElementById('vidLoading');
+
   vid.style.display='none';
   loading.style.display='flex';
+  loading.textContent='\u23f3';
   vid.src='clips/'+ex.file;
   vid.load();
+
   document.getElementById('modalTitle').textContent=ex.name;
-  document.getElementById('modalTags').innerHTML=`
-    <span class="tag c-${cat}">${cat.toUpperCase()}</span>
-    <span class="tag" style="border-color:var(--muted);color:var(--muted)">${ex.sets} sets</span>
-    <span class="tag" style="border-color:var(--muted);color:var(--muted)">${ex.reps} ${ex.unit!=='failure'?ex.unit:''}</span>
-    ${ex.note?`<span class="tag" style="border-color:var(--accent);color:var(--accent)">${ex.note}</span>`:''}
-  `;
-  document.getElementById('modalCues').innerHTML=ex.cues.map(c=>`<li>${c}</li>`).join('');
+
+  // Tags — use plan reps/sets if available from context
+  const planEntry = null; // modal shows ex defaults
+  document.getElementById('modalTags').innerHTML=
+    '<span class="tag c-'+cat+'">'+cat.toUpperCase()+'</span>'
+    +'<span class="tag" style="border-color:var(--muted);color:var(--muted)">'+ex.sets+' sets</span>'
+    +'<span class="tag" style="border-color:var(--muted);color:var(--muted)">'+ex.reps+(ex.unit!=='failure'?' '+ex.unit:'')+'</span>'
+    +(ex.note?'<span class="tag" style="border-color:var(--accent);color:var(--accent)">'+ex.note+'</span>':'');
+
+  document.getElementById('modalCues').innerHTML=ex.cues.map(function(c){return'<li>'+c+'</li>'}).join('');
+
+  // Nav buttons
+  var total = _modalCtx.exs.length;
+  var idx   = _modalCtx.idx;
+  document.getElementById('modalCounter').textContent = total>1 ? (idx+1)+' / '+total : '';
+  document.getElementById('modalPrev').disabled = (idx===0);
+  document.getElementById('modalNext').disabled = (idx===total-1);
+
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow='hidden';
 }
+
+function modalNav(dir){
+  var next = _modalCtx.idx + dir;
+  if(next<0||next>=_modalCtx.exs.length) return;
+  _modalCtx.idx = next;
+  _renderModal(_modalCtx.exs[next]);
+}
+
 function closeModal(){
-  const vid=document.getElementById('modalVideo');
-  vid.pause();vid.src='';
+  var vid=document.getElementById('modalVideo');
+  vid.pause(); vid.src='';
   document.getElementById('modal').classList.remove('open');
   document.body.style.overflow='';
 }
+
 document.getElementById('modal').addEventListener('click',function(e){
-  if(e.target===this)closeModal();
+  if(e.target===this) closeModal();
 });
+
+// Swipe left/right in modal to navigate exercises
+var _swipeX=0, _swipeY=0;
+document.getElementById('modal').addEventListener('touchstart',function(e){
+  _swipeX=e.touches[0].clientX;
+  _swipeY=e.touches[0].clientY;
+},{passive:true});
+document.getElementById('modal').addEventListener('touchend',function(e){
+  var dx=e.changedTouches[0].clientX-_swipeX;
+  var dy=e.changedTouches[0].clientY-_swipeY;
+  // Only trigger if horizontal swipe is dominant
+  if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){
+    if(dx<0) modalNav(1);   // swipe left = next
+    else     modalNav(-1);  // swipe right = prev
+  } else if(dy>80 && Math.abs(dy)>Math.abs(dx)*1.5){
+    closeModal(); // swipe down = close
+  }
+},{passive:true});
 
 // ═══════════════════════════════════════════
 // LIBRARY
 // ═══════════════════════════════════════════
-function renderLib(cat='all',q=''){
-  const cont=document.getElementById('libContent');
-  const cats=cat==='all'?['back','chest','core','legs']:[cat];
-  let html='';
-  cats.forEach(c=>{
-    const list=EX[c].filter(e=>!q||e.name.toLowerCase().includes(q.toLowerCase()));
-    if(!list.length)return;
-    html+=`<div class="lib-cat-header"><div class="lib-cat-dot dot-${c}"></div>${c.charAt(0).toUpperCase()+c.slice(1)} (${list.length})</div>`;
-    html+=`<div class="lib-grid">`;
-    list.forEach(ex=>{
-      html+=`<div class="lib-card" onclick="openModal('${ex.id}')">
-        <div class="lib-thumb">
-          <video src="clips/${ex.file}" muted playsinline webkit-playsinline preload="none" style="width:100%;height:100%;object-fit:cover"></video>
-          <div class="lib-play-icon">▶</div>
-        </div>
-        <div class="lib-info">
-          <div class="lib-name">${ex.name}</div>
-          <div class="lib-meta">${ex.sets} sets · ${ex.reps} ${ex.unit!=='failure'?ex.unit:'to failure'}${ex.note?'  ·  '+ex.note:''}</div>
-        </div>
-        <div class="lib-arrow">›</div>
-      </div>`;
+function renderLib(cat,q){
+  cat=cat||'all'; q=q||'';
+  var cont=document.getElementById('libContent');
+  var cats=cat==='all'?['back','chest','core','legs']:[cat];
+  var html='';
+  cats.forEach(function(c){
+    var list=EX[c].filter(function(e){return !q||e.name.toLowerCase().indexOf(q.toLowerCase())>=0});
+    if(!list.length) return;
+    html+='<div class="lib-cat-header"><div class="lib-cat-dot dot-'+c+'"></div>'+c.charAt(0).toUpperCase()+c.slice(1)+' ('+list.length+')</div>';
+    html+='<div class="lib-grid">';
+    list.forEach(function(ex){
+      html+='<div class="lib-card" onclick="openModal(\''+ex.id+'\',null,null)">'
+        +'<div class="lib-thumb">'
+        +'<video src="clips/'+ex.file+'" muted playsinline webkit-playsinline preload="none" style="width:100%;height:100%;object-fit:cover"></video>'
+        +'<div class="lib-play-icon">\u25b6</div>'
+        +'</div>'
+        +'<div class="lib-info">'
+        +'<div class="lib-name">'+ex.name+'</div>'
+        +'<div class="lib-meta">'+ex.sets+' sets \u00b7 '+ex.reps+' '+(ex.unit!=='failure'?ex.unit:'to failure')+(ex.note?'  \u00b7  '+ex.note:'')+'</div>'
+        +'</div>'
+        +'<div class="lib-arrow">\u203a</div>'
+        +'</div>';
     });
-    html+=`</div>`;
-    if(cats.indexOf(c)<cats.length-1) html+=`<div style="height:8px"></div>`;
+    html+='</div><div style="height:8px"></div>';
   });
-  if(!html) html=`<p style="padding:30px;text-align:center;color:var(--muted)">No exercises found for "${q}"</p>`;
+  if(!html) html='<p style="padding:30px;text-align:center;color:var(--muted)">No exercises found</p>';
   cont.innerHTML=html;
 }
 function setCat(cat,el){
   currentCat=cat;
-  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('active')});
   el.classList.add('active');
   renderLib(cat,document.getElementById('searchInput').value);
 }
@@ -558,27 +784,20 @@ function filterLib(q){renderLib(currentCat,q)}
 // ═══════════════════════════════════════════
 // PANE SWITCHING
 // ═══════════════════════════════════════════
-function switchPane(name){
-  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+function switchPane(name,ev){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
   document.getElementById('pane-'+name).classList.add('active');
-  event.currentTarget.classList.add('active');
-  if(name==='library')renderLib(currentCat,'');
+  if(ev&&ev.currentTarget) ev.currentTarget.classList.add('active');
+  if(name==='library') renderLib(currentCat,'');
 }
 
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-renderWeekSelector();
-selectWeek(1);
+renderProgram();
 renderLib('all','');
 
-// Swipe to close modal on iOS
-let touchStartY=0;
-document.getElementById('modal').addEventListener('touchstart',e=>touchStartY=e.touches[0].clientY,{passive:true});
-document.getElementById('modal').addEventListener('touchmove',e=>{
-  if(e.touches[0].clientY-touchStartY>80)closeModal();
-},{passive:true});
 </script>
 </body>
 </html>
